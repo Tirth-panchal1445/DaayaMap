@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DaayaMap - Authentication</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .auth-header {
+            background: #22c55e;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .auth-header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .auth-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #22c55e;
+            border-bottom: 3px solid #22c55e;
+        }
+
+        .auth-body {
+            padding: 30px;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px 16px;
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .file-input-label:hover {
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #22c55e;
+        }
+
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .role-option {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .role-option:hover {
+            border-color: #22c55e;
+        }
+
+        .role-option.selected {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .role-option input[type="radio"] {
+            display: none;
+        }
+
+        .role-option-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .role-option-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .conditional-fields {
+            display: none;
+        }
+
+        .conditional-fields.show {
+            display: block;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #16a34a;
+        }
+
+        .submit-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #22c55e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>🍲 DaayaMap</h1>
+            <p>Connecting surplus food with those in need</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="tab active" data-tab="login">Login</button>
+            <button class="tab" data-tab="signup">Sign Up</button>
+        </div>
+
+        <div class="auth-body">
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 12px; color: #6b7280;">Processing...</p>
+            </div>
+
+            <!-- Login Form -->
+            <div class="form-section active" id="loginForm">
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Login</button>
+                </form>
+            </div>
+
+            <!-- Signup Form -->
+            <div class="form-section" id="signupForm">
+                <form id="signupFormElement">
+                    <div class="form-group">
+                        <label>I am a...</label>
+                        <div class="role-selector">
+                            <label class="role-option" id="donorOption">
+                                <input type="radio" name="userType" value="donor">
+                                <div class="role-option-title">🍽️ Donor</div>
+                                <div class="role-option-desc">Restaurant/Caterer</div>
+                            </label>
+                            <label class="role-option" id="ngoOption">
+                                <input type="radio" name="userType" value="ngo">
+                                <div class="role-option-title">🤝 NGO</div>
+                                <div class="role-option-desc">Food Collector</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+
+                    <!-- Donor Fields -->
+                    <div class="conditional-fields" id="donorFields">
+                        <div class="form-group">
+                            <label>Restaurant Name</label>
+                            <input type="text" id="restaurantName">
+                        </div>
+                        <div class="form-group">
+                            <label>FSSAI ID</label>
+                            <input type="text" id="fssaiId">
+                        </div>
+                        <div class="form-group">
+                            <label>Aadhar Card</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="aadharImage" accept="image/*">
+                                <label for="aadharImage" class="file-input-label">
+                                    📄 Upload Aadhar Card
+                                </label>
+                                <div class="file-name" id="aadharFileName"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NGO Fields -->
+                    <div class="conditional-fields" id="ngoFields">
+                        <div class="form-group">
+                            <label>NGO Name</label>
+                            <input type="text" id="ngoName">
+                        </div>
+                        <div class="form-group">
+                            <label>NGO Certificate</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="ngoCertificate" accept="image/*">
+                                <label for="ngoCertificate" class="file-input-label">
+                                    📄 Upload Certificate
+                                </label>
+                                <div class="file-name" id="certFileName"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Worker ID</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="workerId" accept="image/*">
+                                <label for="workerId" class="file-input-label">
+                                    📄 Upload Worker ID
+                                </label>
+                                <div class="file-name" id="workerFileName"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Create Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+
+        // Tab Switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const targetForm = tab.dataset.tab === 'login' ? 'loginForm' : 'signupForm';
+                document.getElementById(targetForm).classList.add('active');
+                hideError();
+            });
+        });
+
+        // Role Selection
+        document.querySelectorAll('.role-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.role-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                
+                const radio = option.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Show/hide conditional fields
+                document.getElementById('donorFields').classList.remove('show');
+                document.getElementById('ngoFields').classList.remove('show');
+                
+                if (radio.value === 'donor') {
+                    document.getElementById('donorFields').classList.add('show');
+                } else {
+                    document.getElementById('ngoFields').classList.add('show');
+                }
+            });
+        });
+
+        // File Input Display
+        ['aadharImage', 'ngoCertificate', 'workerId'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('change', (e) => {
+                    const fileName = e.target.files[0]?.name || '';
+                    const displayId = id === 'aadharImage' ? 'aadharFileName' : 
+                                     id === 'ngoCertificate' ? 'certFileName' : 'workerFileName';
+                    document.getElementById(displayId).textContent = fileName ? `✓ ${fileName}` : '';
+                });
+            }
+        });
+
+        // Login Handler
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+            showLoading();
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    sessionStorage.setItem('currentUser', JSON.stringify({
+                        user_id: data.user_id,
+                        user_type: data.user_type,
+                        email: email
+                    }));
+
+                    // Redirect based on user type
+                    if (data.user_type === 'donor') {
+                        window.location.href = '/donate';
+                    } else {
+                        window.location.href = '/mainmap';
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                showError('Connection error. Please try again.');
+            }
+        });
+
+        // Signup Handler
+        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const userType = document.querySelector('input[name="userType"]:checked')?.value;
+
+            if (!userType) {
+                showError('Please select a role (Donor or NGO)');
+                return;
+            }
+
+            showLoading();
+
+            const signupData = { email, password, user_type: userType };
+
+            try {
+                // Handle file uploads first if needed
+                if (userType === 'donor') {
+                    signupData.restaurant_name = document.getElementById('restaurantName').value;
+                    signupData.fssai_id = document.getElementById('fssaiId').value;
+                    
+                    const aadharFile = document.getElementById('aadharImage').files[0];
+                    if (aadharFile) {
+                        const aadharUrl = await uploadImage(aadharFile);
+                        signupData.aadhar_image_url = aadharUrl;
+                    }
+                } else if (userType === 'ngo') {
+                    signupData.ngo_name = document.getElementById('ngoName').value;
+                    
+                    const certFile = document.getElementById('ngoCertificate').files[0];
+                    const workerFile = document.getElementById('workerId').files[0];
+                    
+                    if (certFile) {
+                        const certUrl = await uploadImage(certFile);
+                        signupData.ngo_certificate_url = certUrl;
+                    }
+                    if (workerFile) {
+                        const workerUrl = await uploadImage(workerFile);
+                        signupData.worker_id_url = workerUrl;
+                    }
+                }
+
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(signupData)
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    sessionStorage.setItem('currentUser', JSON.stringify({
+                        user_id: data.user_id,
+                        user_type: data.user_type,
+                        email: email
+                    }));
+
+                    // Redirect based on user type
+                    if (data.user_type === 'donor') {
+                        window.location.href = '/donate';
+                    } else {
+                        window.location.href = '/mainmap';
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                showError('Registration failed. Please try again.');
+            }
+        });
+
+        // Upload Image Helper
+        async function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(`${API_BASE}/upload-image`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            return data.image_url;
+        }
+
+        // UI Helpers
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = message;
+            errorMsg.classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+            document.querySelectorAll('.submit-btn').forEach(btn => btn.disabled = true);
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+            document.querySelectorAll('.submit-btn').forEach(btn => btn.disabled = false);
+        }
+    </script>
+</body>
+</html>

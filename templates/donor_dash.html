@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DaayaMap - Donor Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f9fafb;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+            color: #22c55e;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .reputation {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0fdf4;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #22c55e;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #111827;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="datetime-local"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .photo-upload {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .photo-upload:hover {
+            border-color: #22c55e;
+        }
+
+        .photo-upload input {
+            display: none;
+        }
+
+        .photo-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 12px auto;
+            border-radius: 8px;
+        }
+
+        #map {
+            height: 300px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .map-hint {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #16a34a;
+        }
+
+        .submit-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .listings-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .listing-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .listing-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .listing-info {
+            flex: 1;
+        }
+
+        .listing-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .listing-detail {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .status-available {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-claimed {
+            background: #fef3c7;
+            color: #854d0e;
+        }
+
+        .status-completed {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .cancel-btn {
+            padding: 6px 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>🍲 DaayaMap - Donor</h1>
+        <div class="user-info">
+            <div class="reputation">
+                <span>👍</span>
+                <span id="reputationScore">0</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="grid">
+            <!-- Post Food Form -->
+            <div class="card">
+                <h2>📦 Post Food Donation</h2>
+                <form id="donationForm">
+                    <div class="form-group">
+                        <label>Food Name</label>
+                        <input type="text" id="foodName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quantity (servings)</label>
+                        <input type="number" id="quantity" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="vegNonVeg" required>
+                            <option value="">Select...</option>
+                            <option value="veg">🥗 Vegetarian</option>
+                            <option value="non-veg">🍗 Non-Vegetarian</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Age Group</label>
+                        <select id="ageGroup" required>
+                            <option value="">Select...</option>
+                            <option value="kids">👶 Kids</option>
+                            <option value="adults">👨 Adults</option>
+                            <option value="elderly">👴 Elderly</option>
+                            <option value="all">👥 All Ages</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Expiry Date & Time</label>
+                        <input type="datetime-local" id="expiryDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description (optional)</label>
+                        <textarea id="description" placeholder="Any special details..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Food Photo</label>
+                        <div class="photo-upload" onclick="document.getElementById('foodPhoto').click()">
+                            <input type="file" id="foodPhoto" accept="image/*">
+                            <div id="photoPreview">
+                                <p>📸 Click to upload photo</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pickup Location</label>
+                        <div class="map-hint">📍 Drag the pin to set exact pickup location</div>
+                        <div id="map"></div>
+                        <input type="text" id="address" placeholder="Address (optional)" style="margin-top: 8px;">
+                    </div>
+
+                    <button type="submit" class="submit-btn">Post Donation</button>
+                </form>
+            </div>
+
+            <!-- My Listings -->
+            <div class="card">
+                <h2>📋 My Listings</h2>
+                <div class="listings-container" id="myListings">
+                    <div class="empty-state">
+                        <p>No donations yet. Post your first donation!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='map_logic.js') }}"></script>
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        let currentUser = null;
+        let selectedPhoto = null;
+
+        // Check authentication
+        function checkAuth() {
+            const userStr = sessionStorage.getItem('currentUser');
+            if (!userStr) {
+                window.location.href = '/';
+                return null;
+            }
+            currentUser = JSON.parse(userStr);
+            if (currentUser.user_type !== 'donor') {
+                alert('Access denied. This is for donors only.');
+                window.location.href = '/';
+                return null;
+            }
+            return currentUser;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkAuth()) return;
+
+            // Initialize map
+            MapLogic.getUserLocation((location) => {
+                MapLogic.initMap('map', location.lat, location.lng, 15);
+                MapLogic.addUserMarker(location.lat, location.lng, true);
+            });
+
+            // Load listings
+            loadMyListings();
+
+            // Photo preview
+            document.getElementById('foodPhoto').addEventListener('change', (e) => {
+                selectedPhoto = e.target.files[0];
+                if (selectedPhoto) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        document.getElementById('photoPreview').innerHTML = 
+                            `<img src="${event.target.result}" class="photo-preview">`;
+                    };
+                    reader.readAsDataURL(selectedPhoto);
+                }
+            });
+        });
+
+        // Submit donation form
+        document.getElementById('donationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!MapLogic.userLocation) {
+                alert('Please wait for location to load');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('donor_id', currentUser.user_id);
+            formData.append('food_name', document.getElementById('foodName').value);
+            formData.append('quantity', document.getElementById('quantity').value);
+            formData.append('veg_nonveg', document.getElementById('vegNonVeg').value);
+            formData.append('age_group', document.getElementById('ageGroup').value);
+            formData.append('expiry_date', document.getElementById('expiryDate').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('address', document.getElementById('address').value);
+            formData.append('latitude', MapLogic.userLocation.lat);
+            formData.append('longitude', MapLogic.userLocation.lng);
+
+            if (selectedPhoto) {
+                formData.append('food_image', selectedPhoto);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/create_listing`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('✅ Donation posted successfully!');
+                    document.getElementById('donationForm').reset();
+                    document.getElementById('photoPreview').innerHTML = '<p>📸 Click to upload photo</p>';
+                    selectedPhoto = null;
+                    loadMyListings();
+                }
+            } catch (error) {
+                alert('Failed to post donation. Please try again.');
+            }
+        });
+
+        // Load my listings
+        async function loadMyListings() {
+            try {
+                const response = await fetch(`${API_BASE}/get-listings`);
+                const data = await response.json();
+
+                const myListings = data.listings.filter(l => l.donor_id === currentUser.user_id);
+                const container = document.getElementById('myListings');
+
+                if (myListings.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>No donations yet. Post your first donation!</p></div>';
+                    return;
+                }
+
+                container.innerHTML = myListings.map(listing => `
+                    <div class="listing-card">
+                        <img src="${listing.image_url || 'https://via.placeholder.com/80'}" 
+                             class="listing-image" alt="${listing.food_name}">
+                        <div class="listing-info">
+                            <div class="listing-title">${listing.food_name}</div>
+                            <div class="listing-detail">Quantity: ${listing.quantity} servings</div>
+                            <div class="listing-detail">Expires: ${new Date(listing.expiry_date).toLocaleString()}</div>
+                            <span class="status-badge status-${listing.status}">${listing.status}</span>
+                            ${listing.status === 'available' ? 
+                                `<button class="cancel-btn" onclick="cancelListing('${listing.listing_id || ''}')">Cancel</button>` 
+                                : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load listings:', error);
+            }
+        }
+
+        // Cancel listing
+        async function cancelListing(listingId) {
+            if (!confirm('Are you sure you want to cancel this donation?')) return;
+
+            try {
+                // Note: You'll need to add a cancel endpoint in your Flask backend
+                alert('Cancel functionality needs backend endpoint');
+                // After implementing backend:
+                // const response = await fetch(`${API_BASE}/cancel-listing`, {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ listing_id: listingId, donor_id: currentUser.user_id })
+                // });
+                // loadMyListings();
+            } catch (error) {
+                alert('Failed to cancel listing');
+            }
+        }
+
+        // Logout
+        function logout() {
+            sessionStorage.removeItem('currentUser');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
