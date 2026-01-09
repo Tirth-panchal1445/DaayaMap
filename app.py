@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS  
 import firebase_admin
@@ -9,10 +10,22 @@ import base64
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True) 
+firebase_config_json = os.getenv('FIREBASE_CONFIG')
 
-cred = credentials.Certificate('serviceKey.json')
-firebase_admin.initialize_app(cred, {
-    'storageBucket': 'top-amplifier-483709-g3.appspot.com'})
+if firebase_config_json:
+    try:
+        firebase_config = json.loads(firebase_config_json)
+        cred = credentials.Certificate(firebase_config)
+        firebase_admin.initialize_app(cred, {
+            'storageBucket': 'top-amplifier-483709-g3.appspot.com'
+        })
+        print("✅ Firebase initialized successfully!")
+    except Exception as e:
+        print(f"❌ Firebase initialization error: {e}")
+        cred = None
+else:
+    print("❌ FIREBASE_CONFIG environment variable not found!")
+    cred = None
 
 db = firestore.client()
 bucket = storage.bucket()
