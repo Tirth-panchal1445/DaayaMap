@@ -10,6 +10,7 @@ import base64
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True) 
+
 firebase_config_json = os.getenv('FIREBASE_CONFIG')
 
 if firebase_config_json:
